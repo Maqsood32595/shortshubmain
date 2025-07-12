@@ -24,6 +24,7 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
+
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
@@ -47,19 +48,6 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
-    },
-    mutations: {
-      retry: false,
-    },
-  },
-});
-import { QueryClient } from "@tanstack/react-query";
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: (failureCount, error: any) => {
         // Don't retry on 401/403 errors
@@ -68,6 +56,9 @@ export const queryClient = new QueryClient({
         }
         return failureCount < 3;
       },
+    },
+    mutations: {
+      retry: false,
     },
   },
 });

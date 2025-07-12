@@ -23,29 +23,39 @@ export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+
   // Video operations
-  getVideos(userId: string, cursor?: string, limit?: number): Promise<{ videos: Video[], nextCursor?: string }>;
+  getVideos(
+    userId: string,
+    cursor?: string,
+    limit?: number,
+  ): Promise<{ videos: Video[]; nextCursor?: string }>;
   createVideo(video: InsertVideo): Promise<Video>;
   updateVideo(id: string, updates: Partial<Video>): Promise<Video>;
   getVideo(id: string): Promise<Video | undefined>;
-  
+
   // AI Job operations
   createAiJob(job: InsertAiJob): Promise<AiJob>;
   updateAiJob(id: string, updates: Partial<AiJob>): Promise<AiJob>;
   getAiJob(id: string): Promise<AiJob | undefined>;
   getUserAiJobs(userId: string): Promise<AiJob[]>;
-  
+
   // Scheduled Post operations
   createScheduledPost(post: InsertScheduledPost): Promise<ScheduledPost>;
-  updateScheduledPost(id: string, updates: Partial<ScheduledPost>): Promise<ScheduledPost>;
+  updateScheduledPost(
+    id: string,
+    updates: Partial<ScheduledPost>,
+  ): Promise<ScheduledPost>;
   getUserScheduledPosts(userId: string): Promise<ScheduledPost[]>;
   getPendingScheduledPosts(): Promise<ScheduledPost[]>;
-  
+
   // Platform Token operations
   upsertPlatformToken(token: InsertPlatformToken): Promise<PlatformToken>;
   getUserPlatformTokens(userId: string): Promise<PlatformToken[]>;
-  getPlatformToken(userId: string, platform: string): Promise<PlatformToken | undefined>;
+  getPlatformToken(
+    userId: string,
+    platform: string,
+  ): Promise<PlatformToken | undefined>;
   deletePlatformToken(userId: string, platform: string): Promise<void>;
 }
 
@@ -72,22 +82,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Video operations
-  async getVideos(userId: string, cursor?: string, limit = 20): Promise<{ videos: Video[], nextCursor?: string }> {
-    const whereClause = cursor 
+  async getVideos(
+    userId: string,
+    cursor?: string,
+    limit = 20,
+  ): Promise<{ videos: Video[]; nextCursor?: string }> {
+    const whereClause = cursor
       ? and(eq(videos.userId, userId), lt(videos.createdAt, new Date(cursor)))
       : eq(videos.userId, userId);
-    
+
     const results = await db
       .select()
       .from(videos)
       .where(whereClause)
       .orderBy(desc(videos.createdAt))
       .limit(limit + 1);
-    
+
     const hasMore = results.length > limit;
     const videoList = hasMore ? results.slice(0, -1) : results;
-    const nextCursor = hasMore ? videoList[videoList.length - 1]?.createdAt?.toISOString() : undefined;
-    
+    const nextCursor = hasMore
+      ? videoList[videoList.length - 1]?.createdAt?.toISOString()
+      : undefined;
+
     return { videos: videoList, nextCursor };
   }
 
@@ -153,7 +169,10 @@ export class DatabaseStorage implements IStorage {
     return newPost;
   }
 
-  async updateScheduledPost(id: string, updates: Partial<ScheduledPost>): Promise<ScheduledPost> {
+  async updateScheduledPost(
+    id: string,
+    updates: Partial<ScheduledPost>,
+  ): Promise<ScheduledPost> {
     const [updatedPost] = await db
       .update(scheduledPosts)
       .set({ ...updates, updatedAt: new Date() })
@@ -174,14 +193,18 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(scheduledPosts)
-      .where(and(
-        eq(scheduledPosts.status, "pending"),
-        lt(scheduledPosts.scheduleAt, new Date())
-      ));
+      .where(
+        and(
+          eq(scheduledPosts.status, "pending"),
+          lt(scheduledPosts.scheduleAt, new Date()),
+        ),
+      );
   }
 
   // Platform Token operations
-  async upsertPlatformToken(token: InsertPlatformToken): Promise<PlatformToken> {
+  async upsertPlatformToken(
+    token: InsertPlatformToken,
+  ): Promise<PlatformToken> {
     const [newToken] = await db
       .insert(platformTokens)
       .values({ id: crypto.randomUUID(), ...token })
@@ -203,24 +226,31 @@ export class DatabaseStorage implements IStorage {
       .where(eq(platformTokens.userId, userId));
   }
 
-  async getPlatformToken(userId: string, platform: string): Promise<PlatformToken | undefined> {
+  async getPlatformToken(
+    userId: string,
+    platform: string,
+  ): Promise<PlatformToken | undefined> {
     const [token] = await db
       .select()
       .from(platformTokens)
-      .where(and(
-        eq(platformTokens.userId, userId),
-        eq(platformTokens.platform, platform)
-      ));
+      .where(
+        and(
+          eq(platformTokens.userId, userId),
+          eq(platformTokens.platform, platform),
+        ),
+      );
     return token;
   }
 
   async deletePlatformToken(userId: string, platform: string): Promise<void> {
     await db
       .delete(platformTokens)
-      .where(and(
-        eq(platformTokens.userId, userId),
-        eq(platformTokens.platform, platform)
-      ));
+      .where(
+        and(
+          eq(platformTokens.userId, userId),
+          eq(platformTokens.platform, platform),
+        ),
+      );
   }
 }
 
@@ -246,7 +276,7 @@ class Storage {
     if (!connectionString) {
       throw new Error("DATABASE_URL environment variable is not set");
     }
-    
+
     const sql = neon(connectionString);
     this.db = drizzle(sql, { schema });
   }
@@ -296,15 +326,17 @@ class Storage {
       query = query.where(
         and(
           eq(schema.videos.userId, userId),
-          lte(schema.videos.createdAt, cursorDate)
-        )
+          lte(schema.videos.createdAt, cursorDate),
+        ),
       );
     }
 
     const videos = await query;
     const hasMore = videos.length > limit;
     const items = hasMore ? videos.slice(0, -1) : videos;
-    const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() : undefined;
+    const nextCursor = hasMore
+      ? items[items.length - 1]?.createdAt?.toISOString()
+      : undefined;
 
     return {
       videos: items,
@@ -456,12 +488,16 @@ class Storage {
       .where(
         and(
           eq(schema.platformTokens.userId, userId),
-          eq(schema.platformTokens.platform, platform)
-        )
+          eq(schema.platformTokens.platform, platform),
+        ),
       );
   }
 
-  async updatePlatformToken(userId: string, platform: string, updates: Partial<InsertPlatformToken>) {
+  async updatePlatformToken(
+    userId: string,
+    platform: string,
+    updates: Partial<InsertPlatformToken>,
+  ) {
     const [token] = await this.db
       .update(schema.platformTokens)
       .set({
@@ -471,12 +507,12 @@ class Storage {
       .where(
         and(
           eq(schema.platformTokens.userId, userId),
-          eq(schema.platformTokens.platform, platform)
-        )
+          eq(schema.platformTokens.platform, platform),
+        ),
       )
       .returning();
     return token;
   }
 }
 
-export const storage = new Storage();
+export const filestorage = new Storage();

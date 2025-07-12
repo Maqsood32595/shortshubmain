@@ -1,5 +1,5 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
 import ws from "ws";
 import * as schema from "@shared/schema";
 
@@ -11,16 +11,8 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Create a single database connection pool
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+// Export a single instance of the database connection
 export const db = drizzle({ client: pool, schema });
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "@shared/schema";
-
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is not set");
-}
-
-const sql = neon(connectionString);
-export const db = drizzle(sql, { schema });
