@@ -225,3 +225,258 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import * as schema from "@shared/schema";
+import type {
+  UpsertUser,
+  InsertVideo,
+  InsertAiJob,
+  InsertScheduledPost,
+  InsertPlatformToken,
+} from "@shared/schema";
+
+class Storage {
+  private db: ReturnType<typeof drizzle>;
+
+  constructor() {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error("DATABASE_URL environment variable is not set");
+    }
+    
+    const sql = neon(connectionString);
+    this.db = drizzle(sql, { schema });
+  }
+
+  // Users
+  async getUser(id: string) {
+    const [user] = await this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .limit(1);
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser) {
+    const [user] = await this.db
+      .insert(schema.users)
+      .values({
+        ...userData,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: schema.users.id,
+        set: {
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Videos
+  async getVideos(userId: string, cursor?: string, limit: number = 20) {
+    let query = this.db
+      .select()
+      .from(schema.videos)
+      .where(eq(schema.videos.userId, userId))
+      .orderBy(desc(schema.videos.createdAt))
+      .limit(limit + 1);
+
+    if (cursor) {
+      const cursorDate = new Date(cursor);
+      query = query.where(
+        and(
+          eq(schema.videos.userId, userId),
+          lte(schema.videos.createdAt, cursorDate)
+        )
+      );
+    }
+
+    const videos = await query;
+    const hasMore = videos.length > limit;
+    const items = hasMore ? videos.slice(0, -1) : videos;
+    const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() : undefined;
+
+    return {
+      videos: items,
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  async getVideo(id: string) {
+    const [video] = await this.db
+      .select()
+      .from(schema.videos)
+      .where(eq(schema.videos.id, id))
+      .limit(1);
+    return video;
+  }
+
+  async createVideo(videoData: InsertVideo) {
+    const [video] = await this.db
+      .insert(schema.videos)
+      .values({
+        id: nanoid(),
+        ...videoData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return video;
+  }
+
+  async updateVideo(id: string, updates: Partial<InsertVideo>) {
+    const [video] = await this.db
+      .update(schema.videos)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.videos.id, id))
+      .returning();
+    return video;
+  }
+
+  // AI Jobs
+  async createAiJob(jobData: InsertAiJob) {
+    const [job] = await this.db
+      .insert(schema.aiJobs)
+      .values({
+        id: nanoid(),
+        ...jobData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return job;
+  }
+
+  async getAiJob(id: string) {
+    const [job] = await this.db
+      .select()
+      .from(schema.aiJobs)
+      .where(eq(schema.aiJobs.id, id))
+      .limit(1);
+    return job;
+  }
+
+  async getUserAiJobs(userId: string) {
+    const jobs = await this.db
+      .select()
+      .from(schema.aiJobs)
+      .where(eq(schema.aiJobs.userId, userId))
+      .orderBy(desc(schema.aiJobs.createdAt))
+      .limit(50);
+    return jobs;
+  }
+
+  async updateAiJob(id: string, updates: Partial<InsertAiJob>) {
+    const [job] = await this.db
+      .update(schema.aiJobs)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.aiJobs.id, id))
+      .returning();
+    return job;
+  }
+
+  // Scheduled Posts
+  async createScheduledPost(postData: InsertScheduledPost) {
+    const [post] = await this.db
+      .insert(schema.scheduledPosts)
+      .values({
+        id: nanoid(),
+        ...postData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return post;
+  }
+
+  async getUserScheduledPosts(userId: string) {
+    const posts = await this.db
+      .select()
+      .from(schema.scheduledPosts)
+      .where(eq(schema.scheduledPosts.userId, userId))
+      .orderBy(desc(schema.scheduledPosts.scheduleAt))
+      .limit(100);
+    return posts;
+  }
+
+  async updateScheduledPost(id: string, updates: Partial<InsertScheduledPost>) {
+    const [post] = await this.db
+      .update(schema.scheduledPosts)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.scheduledPosts.id, id))
+      .returning();
+    return post;
+  }
+
+  // Platform Tokens
+  async createPlatformToken(tokenData: InsertPlatformToken) {
+    const [token] = await this.db
+      .insert(schema.platformTokens)
+      .values({
+        id: nanoid(),
+        ...tokenData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return token;
+  }
+
+  async getUserPlatformTokens(userId: string) {
+    const tokens = await this.db
+      .select()
+      .from(schema.platformTokens)
+      .where(eq(schema.platformTokens.userId, userId));
+    return tokens;
+  }
+
+  async deletePlatformToken(userId: string, platform: string) {
+    await this.db
+      .delete(schema.platformTokens)
+      .where(
+        and(
+          eq(schema.platformTokens.userId, userId),
+          eq(schema.platformTokens.platform, platform)
+        )
+      );
+  }
+
+  async updatePlatformToken(userId: string, platform: string, updates: Partial<InsertPlatformToken>) {
+    const [token] = await this.db
+      .update(schema.platformTokens)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(schema.platformTokens.userId, userId),
+          eq(schema.platformTokens.platform, platform)
+        )
+      )
+      .returning();
+    return token;
+  }
+}
+
+export const storage = new Storage();

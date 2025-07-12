@@ -1,3 +1,4 @@
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -12,35 +13,33 @@ import Scheduler from "@/pages/Scheduler";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 brand-gradient rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-slow">
-            <i className="fas fa-video text-white text-xl"></i>
+          <div className="w-8 h-8 brand-gradient rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse-slow">
+            <i className="fas fa-spinner fa-spin text-white text-sm"></i>
           </div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 text-sm">Loading...</p>
         </div>
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/shorts" component={MyShorts} />
-          <Route path="/ai" component={AIEditor} />
-          <Route path="/scheduler/:videoId?" component={Scheduler} />
-          <Route path="/profile" component={Profile} />
-        </>
-      )}
+      <Route path="/" component={Home} />
+      <Route path="/shorts" component={MyShorts} />
+      <Route path="/ai" component={AIEditor} />
+      <Route path="/scheduler/:id?" component={Scheduler} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -50,8 +49,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AppContent />
         <Toaster />
-        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );
