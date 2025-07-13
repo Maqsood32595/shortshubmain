@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "wouter"; // Adjust import based on your routing solution
 
 const LoginPage: React.FC = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -13,7 +14,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen pb-16">
       <div className="dev-notice">
         <div className="container">
           <p>
@@ -74,9 +75,9 @@ const LoginPage: React.FC = () => {
                 <label className="remember-me">
                   <input type="checkbox" /> Remember me
                 </label>
-                <a href="#" className="forgot-password">
+                <Link href="/forgot-password" className="forgot-password">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <button type="submit" className="sign-in-btn">
                 Sign in
@@ -85,14 +86,14 @@ const LoginPage: React.FC = () => {
             <div className="divider">
               <span>Or continue with</span>
             </div>
-            <button 
-              className="google-btn" 
-              onClick={() => window.location.href = "/api/login"}
+            <button
+              className="google-btn"
+              onClick={() => (window.location.href = "/api/login")}
             >
               <span>🔍</span> Continue with Google
             </button>
             <div className="signup-link">
-              Don't have an account? <a href="#">Sign up</a>
+              Don't have an account? <Link href="/signup">Sign up</Link>
             </div>
           </div>
         </div>
@@ -142,30 +143,6 @@ const LoginPage: React.FC = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-        }
-
-        .logo {
-          font-size: 32px;
-          font-weight: bold;
-          color: #e53e3e;
-        }
-
-        .tagline,
-        .hero p {
-          font-size: 18px;
-          color: #666;
-          margin-top: 5px;
-        }
-
-        .hero {
-          padding: 80px 0;
-          text-align: center;
-          color: white;
-        }
-
-        .hero h1 {
-          font-size: 56px;
-          margin-bottom: 20px;
         }
 
         .login-section {
@@ -279,7 +256,7 @@ const LoginPage: React.FC = () => {
           text-decoration: underline;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

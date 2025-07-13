@@ -1,16 +1,47 @@
-import { drizzle } from "drizzle-orm/neon-http"; // Ensure this import is correct
-import { Client } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres"; // Corrected: Use 'drizzle-orm/node-postgres'
+import { Client } from "pg"; // Standard PostgreSQL client
+import * as schema from "@shared/schema"; // Your Drizzle schema definitions
 
-const connectionString =
-  "postgresql://app_user:Oraib%40123@35.238.175.253:5432/shortshub";
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error(
+    "No database connection string provided. Please set DATABASE_URL in your Replit secrets.",
+  );
+  process.exit(1); // Exit if the connection string is not available
+}
 
 const client = new Client({
   connectionString: connectionString,
 });
 
-async function connectDB() {
-  await client.connect();
-  return drizzle(client);
+// A variable to hold the Drizzle DB instance once it's successfully initialized
+let cachedDbInstance: ReturnType<typeof drizzle> | null = null;
+
+/**
+ * Connects the PostgreSQL client and initializes Drizzle ORM.
+ * This function ensures the connection is established only once.
+ * @returns The Drizzle ORM instance.
+ */
+export async function getDb() {
+  if (cachedDbInstance) {
+    return cachedDbInstance; // Return the cached instance if already connected
+  }
+
+  try {
+    await client.connect(); // Establish the connection to PostgreSQL
+    console.log("Successfully connected to Google Cloud PostgreSQL.");
+    cachedDbInstance = drizzle(client, { schema }); // Initialize Drizzle with the connected client
+    return cachedDbInstance;
+  } catch (error) {
+    console.error(
+      "Error connecting to the database or initializing Drizzle:",
+      error,
+    );
+    process.exit(1); // Critical error, exit the process
+  }
 }
 
-export const db = connectDB(); // Export the connected database instance
+// You should call `await getDb();` once at the very beginning of your application's startup
+// (e.g., in your main `server.ts` or `index.ts` file) before starting your Express server
+// or doing any database operations.
