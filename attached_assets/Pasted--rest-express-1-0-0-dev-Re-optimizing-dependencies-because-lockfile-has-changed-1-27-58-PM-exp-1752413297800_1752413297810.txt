@@ -1,0 +1,75 @@
+
+> rest-express@1.0.0 dev
+Re-optimizing dependencies because lockfile has changed
+1:27:58 PM [express] serving on port 5000
+Error:   Failed to scan for dependencies from entries:
+  /home/runner/workspace/client/index.html
+
+  ✘ [ERROR] The symbol "AppContent" has already been declared
+
+    client/src/App.tsx:72:9:
+      72 │ function AppContent() {
+         ╵          ~~~~~~~~~~
+
+  The symbol "AppContent" was originally declared here:
+
+    client/src/App.tsx:16:9:
+      16 │ function AppContent() {
+         ╵          ~~~~~~~~~~
+
+  Duplicate top-level function declarations are not allowed in an ECMAScript module. This file is considered to be an ECMAScript module because of the "export" keyword here:
+
+    client/src/App.tsx:115:0:
+      115 │ export default App;
+          ╵ ~~~~~~
+
+
+✘ [ERROR] The symbol "App" has already been declared
+
+    client/src/App.tsx:104:9:
+      104 │ function App() {
+          ╵          ~~~
+
+  The symbol "App" was originally declared here:
+
+    client/src/App.tsx:46:9:
+      46 │ function App() {
+         ╵          ~~~
+
+  Duplicate top-level function declarations are not allowed in an ECMAScript module. This file is considered to be an ECMAScript module because of the "export" keyword here:
+
+    client/src/App.tsx:115:0:
+      115 │ export default App;
+          ╵ ~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "default"
+
+    client/src/App.tsx:115:7:
+      115 │ export default App;
+          ╵        ~~~~~~~
+
+  The name "default" was originally exported here:
+
+    client/src/App.tsx:57:7:
+      57 │ export default App;
+         ╵        ~~~~~~~
+
+
+✘ [ERROR] Expected identifier but found "!"
+
+    client/src/pages/LoginPage.tsx:1:9:
+      1 │         <!DOCTYPE html>
+        ╵          ^
+
+
+    at failureErrorWithLog (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15)
+    at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:945:25
+    at runOnEndCallbacks (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1315:45)
+    at buildResponseToResult (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:943:7)
+    at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:955:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:954:54)
+    at handleRequest (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:647:17)
+    at handleIncomingPacket (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:672:7)
+    at Socket.readFromStdout (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:600:7)

@@ -1,4 +1,3 @@
-
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import AIEditor from "@/pages/AIEditor";
 import Scheduler from "@/pages/Scheduler";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
+import LoginPage from "@/pages/LoginPage"; // Import your LoginPage component
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,7 +30,7 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <Landing />;
+    return <LoginPage />; // Redirect to LoginPage when not authenticated
   }
 
   return (

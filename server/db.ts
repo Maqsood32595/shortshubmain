@@ -1,18 +1,16 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
-import * as schema from "@shared/schema";
+import { drizzle } from "drizzle-orm/neon-http"; // Ensure this import is correct
+import { Client } from "pg";
 
-neonConfig.webSocketConstructor = ws;
+const connectionString =
+  "postgresql://app_user:Oraib%40123@35.238.175.253:5432/shortshub";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+const client = new Client({
+  connectionString: connectionString,
+});
+
+async function connectDB() {
+  await client.connect();
+  return drizzle(client);
 }
 
-// Create a single database connection pool
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-// Export a single instance of the database connection
-export const db = drizzle({ client: pool, schema });
+export const db = connectDB(); // Export the connected database instance
