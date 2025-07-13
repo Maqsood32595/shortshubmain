@@ -1,0 +1,31 @@
+> rest-express@1.0.0 dev
+3:35:38 PM [express] serving on port 5000s
+Successfully connected to the PostgreSQL database.
+3:35:44 PM [express] GET /api/auth/user 401 in 36ms :: {"message":"Unauthorized"}
+3:35:59 PM [express] GET /api/auth/user 401 in 38ms :: {"message":"Unauthorized"}
+3:36:04 PM [express] GET /api/login 302 in 40ms
+3:37:48 PM [express] GET /api/callback 302 in 1ms
+3:38:10 PM [express] GET /api/auth/user 401 in 177ms :: {"message":"Unauthorized"}
+3:38:14 PM [express] GET /api/login 302 in 37ms
+Google OAuth callback received for user: mohammedmaqsoodl@shortshub.app
+Error during Google OAuth: TypeError: db.insert is not a function
+    at DatabaseStorage.upsertUser (/home/runner/workspace/server/storage.ts:71:8)
+    at Strategy._verify (/home/runner/workspace/server/replitAuth.ts:64:38)
+    at /home/runner/workspace/node_modules/passport-oauth2/lib/strategy.js:205:24
+    at /home/runner/workspace/node_modules/passport-google-oauth20/lib/strategy.js:122:5
+    at passBackControl (/home/runner/workspace/node_modules/oauth/lib/oauth2.js:134:9)
+    at IncomingMessage.<anonymous> (/home/runner/workspace/node_modules/oauth/lib/oauth2.js:157:7)
+    at IncomingMessage.emit (node:events:530:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+3:38:20 PM [express] GET /api/callback 500 in 227ms :: {"message":"db.insert is not a function"}
+TypeError: db.insert is not a function
+    at DatabaseStorage.upsertUser (/home/runner/workspace/server/storage.ts:71:8)
+    at Strategy._verify (/home/runner/workspace/server/replitAuth.ts:64:38)
+    at /home/runner/workspace/node_modules/passport-oauth2/lib/strategy.js:205:24
+    at /home/runner/workspace/node_modules/passport-google-oauth20/lib/strategy.js:122:5
+    at passBackControl (/home/runner/workspace/node_modules/oauth/lib/oauth2.js:134:9)
+    at IncomingMessage.<anonymous> (/home/runner/workspace/node_modules/oauth/lib/oauth2.js:157:7)
+    at IncomingMessage.emit (node:events:530:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)

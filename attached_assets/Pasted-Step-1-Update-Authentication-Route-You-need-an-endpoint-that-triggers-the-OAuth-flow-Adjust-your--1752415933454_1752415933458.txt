@@ -1,0 +1,99 @@
+Step 1: Update Authentication Route
+You need an endpoint that triggers the OAuth flow. Adjust your server/replitAuth.ts file to include the /api/login route.
+
+Here’s how to modify your existing code:
+
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+// Use Google Strategy for OAuth
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  callbackURL: "/api/callback",
+  passReqToCallback: true,
+}, async (req, accessToken, refreshToken, profile, done) => {
+  try {
+    const existingUser = await storage.getUserByEmail(profile.emails[0].value);
+    
+    if (existingUser) {
+      return done(null, existingUser);
+    }
+    // Create new user in the database if it doesn't exist
+    const newUser = await storage.upsertUser({
+      id: profile.id,
+      email: profile.emails[0].value,
+      firstName: profile.name.givenName,
+      lastName: profile.name.familyName,
+      profileImageUrl: profile.photos[0]?.value,
+    });
+    done(null, newUser);
+  } catch (error) {
+    console.error("Error during Google OAuth:", error);
+    done(error);
+  }
+}));
+Step 2: Define Routes for Login and Callback
+Ensure that your routes handle login and callback properly. Update the server/routes.ts file as follows:
+
+import { Router } from "express";
+import passport from "passport";
+import { isAuthenticated } from "./replitAuth"; // Make sure this is imported correctly
+const router = Router();
+// Initiate the login with Google
+router.get('/api/login', passport.authenticate('google', {
+  scope: ['profile', 'email'],
+}));
+// Handle the callback from Google
+router.get('/api/callback', passport.authenticate('google', {
+  successReturnToOrRedirect: '/api/auth/user', // Redirect upon a successful login
+  failureRedirect: '/api/login', // Redirect upon failure
+}));
+// Authenticated user data
+router.get('/api/auth/user', isAuthenticated, async (req, res) => {
+  res.json(req.user);
+});
+export default router;
+Step 3: Update Session Management
+Ensure your sessions are set up correctly. Modify your server/replitAuth.ts file to use express-session:
+
+Make sure this is included at the top of your server/replitAuth.ts:
+
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+And that your session is initialized properly:
+
+const pgStore = connectPg(session);
+const sessionStore = new pgStore({
+  conString: process.env.DATABASE_URL,
+  tableName: "sessions",
+});
+app.use(session({
+  store: sessionStore,
+  secret: process.env.SESSION_SECRET!,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 }, // Use secure: true in production
+}));
+Step 4: Set Environment Variables for Google OAuth
+You will need to set environment variables for your Google Client ID and Secret in the Replit Secrets:
+
+Go to your Replit workspace.
+Click on the Secrets pane (lock icon).
+Add the following two keys:
+GOOGLE_CLIENT_ID with your Google OAuth 2.0 Client ID
+GOOGLE_CLIENT_SECRET with your Google OAuth 2.0 Client Secret
+Step 5: Testing
+Start your application and navigate to /api/login, which should redirect you to the Google login page.
+After successful login, it will redirect back to your app and register the email in the database.
+Complete Code Snippets
+LoginPage.tsx Update
+You also need to ensure that the login button directs users to the correct login path:
+
+<button className="google-btn" onClick={() => window.location.href="/api/login"}>
+  <span>🔍</span> Continue with Google
+</button>
+With these implementations, pressing "Connect with Google" will initiate the OAuth process, verify the email with Google, and register the user in your database. If you need more adjustments, feel free to ask!
+
+
+Scroll to latest
+Assistant mode
