@@ -1,14 +1,17 @@
 import { Link } from "wouter";
+import { Card } from "@/components/ui/card";
+
+interface Video {
+  id: string;
+  title: string;
+  thumbnailUrl?: string;
+  duration?: number;
+  createdAt?: string;
+  status: string;
+}
 
 interface VideoCardProps {
-  video: {
-    id: string;
-    title: string;
-    thumbnailUrl?: string;
-    duration?: number;
-    status: string;
-    createdAt: string;
-  };
+  video: Video;
 }
 
 export default function VideoCard({ video }: VideoCardProps) {
@@ -39,76 +42,6 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <Link href={`/scheduler/${video.id}`}>
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group">
-        <div className="aspect-9-16 relative overflow-hidden">
-          {video.thumbnailUrl ? (
-            <img 
-              src={video.thumbnailUrl} 
-              alt={video.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full brand-gradient flex items-center justify-center">
-              <i className="fas fa-video text-white text-2xl"></i>
-            </div>
-          )}
-          
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-          
-          <div className="absolute top-3 right-3">
-            <span className="bg-black/60 text-white text-xs px-2 py-1 rounded-full font-mono">
-              {formatDuration(video.duration)}
-            </span>
-          </div>
-          
-          <div className="absolute bottom-3 left-3 right-3">
-            <h3 className="text-white font-medium text-sm mb-1 line-clamp-2">
-              {video.title}
-            </h3>
-            <div className="flex items-center justify-between text-xs text-gray-300">
-              <span>{new Date(video.createdAt).toLocaleDateString()}</span>
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 ${getStatusColor(video.status)} rounded-full`}></div>
-                <span>{getStatusText(video.status)}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
-              <i className="fas fa-play text-white text-lg"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-import { Link } from "wouter";
-import { Card } from "@/components/ui/card";
-
-interface Video {
-  id: string;
-  title: string;
-  thumbnailUrl?: string;
-  duration?: number;
-  createdAt?: string;
-  status: string;
-}
-
-interface VideoCardProps {
-  video: Video;
-}
-
-export default function VideoCard({ video }: VideoCardProps) {
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${String(secs).padStart(2, '0')}`;
-  };
-
-  return (
-    <Link href={`/scheduler/${video.id}`}>
       <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group">
         <div className="aspect-9-16 relative overflow-hidden rounded-lg">
           {video.thumbnailUrl ? (
@@ -122,10 +55,10 @@ export default function VideoCard({ video }: VideoCardProps) {
               <i className="fas fa-video text-white text-2xl"></i>
             </div>
           )}
-          
+
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-          
+
           {/* Status indicator */}
           {video.status === 'processing' && (
             <div className="absolute top-2 right-2">
@@ -134,7 +67,7 @@ export default function VideoCard({ video }: VideoCardProps) {
               </div>
             </div>
           )}
-          
+
           {/* Duration */}
           {video.duration && (
             <div className="absolute top-2 left-2">
@@ -143,17 +76,26 @@ export default function VideoCard({ video }: VideoCardProps) {
               </span>
             </div>
           )}
-          
-          {/* Title */}
+
+          {/* Title and status */}
           <div className="absolute bottom-2 left-2 right-2">
-            <h3 className="text-white font-medium text-sm line-clamp-2">
+            <h3 className="text-white font-medium text-sm line-clamp-2 mb-1">
               {video.title}
             </h3>
-            {video.createdAt && (
-              <p className="text-white/70 text-xs mt-1">
-                {new Date(video.createdAt).toLocaleDateString()}
-              </p>
-            )}
+            <div className="flex items-center justify-between text-xs text-gray-300">
+              <span>{video.createdAt ? new Date(video.createdAt).toLocaleDateString() : ''}</span>
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 ${getStatusColor(video.status)} rounded-full`}></div>
+                <span>{getStatusText(video.status)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Play button overlay */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+              <i className="fas fa-play text-white text-lg"></i>
+            </div>
           </div>
         </div>
       </Card>
