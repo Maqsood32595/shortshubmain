@@ -12,9 +12,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      res.json(req.user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -24,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Video routes
   app.get('/api/videos', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const cursor = req.query.cursor as string;
       const limit = parseInt(req.query.limit as string) || 20;
       
@@ -44,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user owns the video
-      if (video.userId !== req.user.claims.sub) {
+      if (video.userId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -57,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/videos', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const videoData = insertVideoSchema.parse({
         ...req.body,
         userId,
@@ -77,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Job routes
   app.post('/api/ai/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { prompt, style = "cinematic", duration = 30 } = req.body;
       
       if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
@@ -156,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job not found" });
       }
       
-      if (job.userId !== req.user.claims.sub) {
+      if (job.userId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -169,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/ai/jobs', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const jobs = await storage.getUserAiJobs(userId);
       res.json(jobs);
     } catch (error) {
@@ -181,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scheduled Posts routes
   app.post('/api/schedule', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { videoId, platforms, scheduleAt, caption, hashtags } = req.body;
       
       // Validate that the video exists and belongs to the user
@@ -215,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/schedule', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const scheduledPosts = await storage.getUserScheduledPosts(userId);
       res.json(scheduledPosts);
     } catch (error) {
@@ -227,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Platform Token routes
   app.get('/api/platforms', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const tokens = await storage.getUserPlatformTokens(userId);
       
       // Return platform connection status without exposing tokens
@@ -247,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/platforms/:platform', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const platform = req.params.platform;
       
       await storage.deletePlatformToken(userId, platform);
@@ -261,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stats route
   app.get('/api/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { videos } = await storage.getVideos(userId, undefined, 1000); // Get all videos for stats
       
       const totalVideos = videos.length;

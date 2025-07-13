@@ -85,7 +85,10 @@ const LoginPage: React.FC = () => {
             <div className="divider">
               <span>Or continue with</span>
             </div>
-            <button className="google-btn">
+            <button 
+              className="google-btn" 
+              onClick={() => window.location.href = "/api/login"}
+            >
               <span>🔍</span> Continue with Google
             </button>
             <div className="signup-link">
