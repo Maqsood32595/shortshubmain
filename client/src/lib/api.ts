@@ -45,6 +45,14 @@ class ApiClient {
     return this.get("/api/auth/user");
   }
 
+  async register(data: { email: string; password: string; firstName: string; lastName: string }) {
+    return this.post("/api/auth/register", data);
+  }
+
+  async login(data: { email: string; password: string }) {
+    return this.post("/api/auth/login", data);
+  }
+
   // Videos
   async getVideos(cursor?: string, limit?: number) {
     const params = new URLSearchParams();

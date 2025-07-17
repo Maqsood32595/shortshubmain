@@ -1,0 +1,106 @@
+steps:
+  # Build the container image with build arguments
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/shortshub:$COMMIT_SHA'
+      - '--build-arg'
+      - 'NODE_ENV=production'
+      - '.'
+    timeout: 600s
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/shortshub:$COMMIT_SHA']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'shortshub-app'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/shortshub:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances'
+      - 'corded-cable-460921-u1:us-central1:shortshub-postgres'
+      - '--set-env-vars'
+      - |
+        NODE_ENV=production,
+        DATABASE_URL=$_DATABASE_URL,
+        GOOGLE_CLOUD_PROJECT_ID=$PROJECT_ID,
+        GOOGLE_CLOUD_STORAGE_BUCKET=$_GCS_BUCKET_NAME,
+        SESSION_SECRET=$_SESSION_SECRET,
+        GOOGLE_CLIENT_ID=$_GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET=$_GOOGLE_CLIENT_SECRET,
+        YOUTUBE_API_KEY=$_YOUTUBE_API_KEY,
+        GEMINI_API_KEY=$_GEMINI_API_KEY,
+        CORS_ORIGIN=$_CORS_ORIGIN,
+        PROD_CALLBACK_URL=$_PROD_CALLBACK_URL,
+        PROD_FRONTEND_URL=$_PROD_FRONTEND_URL,
+        PORT=5000
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--max-instances'
+      - '10'
+      - '--min-instances'
+      - '1'
+      - '--timeout'
+      - '300s'
+      - '--concurrency'
+      - '80'
+      - '--port'
+      - '5000'
+      - '--health-check'
+      - '/api/health'
+      - '--health-check-interval'
+      - '30s'
+      - '--health-check-timeout'
+      - '10s'
+      - '--health-check-initial-delay'
+      - '60s'
+
+  # Update Cloud SQL database schema
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'run'
+      - '--rm'
+      - '--network'
+      - 'cloudbuild'
+      - 'gcr.io/cloud-builders/docker'
+      - 'run'
+      - '--rm'
+      - '-e'
+      - 'DATABASE_URL=$_DATABASE_URL'
+      - 'gcr.io/$PROJECT_ID/shortshub:$COMMIT_SHA'
+      - 'npm'
+      - 'run'
+      - 'db:push'
+
+substitutions:
+  _DATABASE_URL: 'postgresql://shortshub_user:${_DB_PASSWORD}@/shortshub?host=/cloudsql/corded-cable-460921-u1:us-central1:shortshub-postgres'
+  _DB_PASSWORD: 'your-secure-db-password'
+  _SESSION_SECRET: 'your-production-session-secret-change-this'
+  _GOOGLE_CLIENT_ID: 'your-production-google-client-id'
+  _GOOGLE_CLIENT_SECRET: 'your-production-google-client-secret'
+  _YOUTUBE_API_KEY: 'your-production-youtube-api-key'
+  _GEMINI_API_KEY: 'your-production-gemini-api-key'
+  _GCS_BUCKET_NAME: 'shortshub-video-storage'
+  _CORS_ORIGIN: 'https://shortshub.app'
+  _PROD_CALLBACK_URL: 'https://shortshub.app/api/callback'
+  _PROD_FRONTEND_URL: 'https://shortshub.app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_MEDIUM
+  substitutionOption: ALLOW_LOOSE
+  dynamicSubstitutions: true
+
+timeout: 1200s

@@ -1,7 +1,7 @@
 
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
 
 :root {
   --color-primary: #e53e3e;
@@ -59,6 +59,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 
 .line-clamp-2 {
@@ -66,6 +67,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 /* Custom scrollbar */
@@ -139,12 +141,17 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border);
+    border-width: 1px;
+    border-style: solid;
   }
 
   body {
-    @apply font-sans antialiased bg-gray-50 text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f9fafb; /* bg-gray-50 */
+    color: var(--foreground); /* text-foreground */
   }
 }
 

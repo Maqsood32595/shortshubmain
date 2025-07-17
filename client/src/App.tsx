@@ -11,7 +11,8 @@ import AIEditor from "@/pages/AIEditor";
 import Scheduler from "@/pages/Scheduler";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
-import LoginPage from "@/pages/LoginPage"; // Import your LoginPage component
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -29,12 +30,11 @@ function AppContent() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <LoginPage />; // Redirect to LoginPage when not authenticated
-  }
-
   return (
     <Switch>
+      <Route path="/login" component={LoginPage} />
+      <Route path="/signup" component={SignupPage} />
+      <Route path="/dashboard" component={Home} />
       <Route path="/" component={Home} />
       <Route path="/shorts" component={MyShorts} />
       <Route path="/ai" component={AIEditor} />

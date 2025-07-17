@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import { api } from "@/lib/api";
 
-const LoginPage: React.FC = () => {
+const SignupPage: React.FC = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    firstName: "",
+    lastName: ""
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,18 +18,37 @@ const LoginPage: React.FC = () => {
     setPasswordVisible(!passwordVisible);
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords don't match!");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await api.login({ email, password });
+      const response = await api.register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+      
       if (response.ok) {
         window.location.href = "/home";
       } else {
         const data = await response.json();
-        setError(data.message || "Login failed");
+        setError(data.message || "Registration failed");
       }
     } catch (err) {
       setError("Network error. Please try again.");
@@ -61,28 +84,52 @@ const LoginPage: React.FC = () => {
 
       <div className="hero">
         <div className="container">
-          <h1>Welcome back</h1>
+          <h1>Join ShortsHub</h1>
           <p>
-            Continue your journey to viral content creation and seamless social
+            Start your journey to viral content creation and seamless social
             media management
           </p>
         </div>
       </div>
 
-      <div className="login-section">
+      <div className="signup-section">
         <div className="container">
-          <div className="login-form">
-            <h2>Sign In</h2>
+          <div className="signup-form">
+            <h2>Create Account</h2>
             <form onSubmit={handleSubmit}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="firstName">First Name</label>
+                  <input 
+                    type="text" 
+                    id="firstName" 
+                    name="firstName" 
+                    required 
+                    value={formData.firstName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="lastName">Last Name</label>
+                  <input 
+                    type="text" 
+                    id="lastName" 
+                    name="lastName" 
+                    required 
+                    value={formData.lastName}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <input 
                   type="email" 
                   id="email" 
                   name="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required 
+                  value={formData.email}
+                  onChange={handleChange}
                 />
               </div>
               <div className="form-group">
@@ -92,9 +139,25 @@ const LoginPage: React.FC = () => {
                     type={passwordVisible ? "text" : "password"}
                     id="password"
                     name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     required
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <span className="password-toggle" onClick={togglePassword}>
+                    {passwordVisible ? "🙈" : "👁️"}
+                  </span>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <div className="password-wrapper">
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
                   />
                   <span className="password-toggle" onClick={togglePassword}>
                     {passwordVisible ? "🙈" : "👁️"}
@@ -102,21 +165,13 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
               <div className="form-options">
-                <label className="remember-me">
-                  <input 
-                    type="checkbox" 
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  /> Remember me
+                <label className="terms">
+                  <input type="checkbox" required /> I agree to the Terms of Service
                 </label>
-                <Link href="/forgot-password" className="forgot-password">
-                  Forgot password?
-                </Link>
               </div>
-              <button type="submit" className="sign-in-btn" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
+              <button type="submit" className="sign-up-btn">
+                Create Account
               </button>
-              {error && <div className="error-message">{error}</div>}
             </form>
             <div className="divider">
               <span>Or continue with</span>
@@ -127,8 +182,8 @@ const LoginPage: React.FC = () => {
             >
               <span>🔍</span> Continue with Google
             </button>
-            <div className="signup-link">
-              Don't have an account? <Link href="/signup">Sign up</Link>
+            <div className="login-link">
+              Already have an account? <Link href="/login">Sign in</Link>
             </div>
           </div>
         </div>
@@ -169,20 +224,25 @@ const LoginPage: React.FC = () => {
           justify-content: space-between;
           align-items: center;
         }
-        .login-section {
+        .signup-section {
           background: white;
           padding: 60px 0;
           margin-top: -40px;
           border-radius: 20px 20px 0 0;
           box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
         }
-        .login-form {
-          max-width: 400px;
+        .signup-form {
+          max-width: 450px;
           margin: 0 auto;
           padding: 40px;
           background: var(--color-form-bg);
           border-radius: 15px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
         }
         .form-group {
           margin-bottom: 20px;
@@ -216,7 +276,7 @@ const LoginPage: React.FC = () => {
           cursor: pointer;
           color: #666;
         }
-        .sign-in-btn {
+        .sign-up-btn {
           width: 100%;
           padding: 15px;
           background: var(--color-btn-gradient);
@@ -228,7 +288,7 @@ const LoginPage: React.FC = () => {
           cursor: pointer;
           transition: transform 0.2s;
         }
-        .sign-in-btn:hover {
+        .sign-up-btn:hover {
           transform: translateY(-2px);
         }
         .divider {
@@ -251,32 +311,32 @@ const LoginPage: React.FC = () => {
         .google-btn:hover {
           background: var(--color-google-btn-hover);
         }
-        .signup-link {
+        .login-link {
           text-align: center;
           margin-top: 25px;
           color: #666;
         }
-        .signup-link a {
+        .login-link a {
           color: var(--color-link);
           text-decoration: none;
           font-weight: 600;
         }
-        .signup-link a:hover {
+        .login-link a:hover {
           text-decoration: underline;
         }
-        .error-message {
-          color: #e74c3c;
-          background-color: #fdf2f2;
-          border: 1px solid #f5c6cb;
-          padding: 10px 15px;
-          border-radius: 8px;
-          margin-top: 15px;
+        .terms {
+          display: flex;
+          align-items: center;
+          gap: 8px;
           font-size: 14px;
-          text-align: center;
+          color: #666;
+        }
+        .terms input {
+          width: auto;
         }
       `}</style>
     </div>
   );
 };
 
-export default LoginPage;
+export default SignupPage;

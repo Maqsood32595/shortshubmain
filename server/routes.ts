@@ -19,6 +19,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      // For now, redirect to Google OAuth registration
+      res.redirect('/api/login');
+    } catch (error) {
+      console.error("Error during registration:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      // For now, redirect to Google OAuth login
+      res.redirect('/api/login');
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
   // Video routes
   app.get('/api/videos', isAuthenticated, async (req: any, res) => {
     try {
